@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import date
 from datetime import datetime
 from passlib.context import CryptContext
-from db import get_db
+from API.db import get_db
 from fastapi import HTTPException, UploadFile
 from PIL import Image  # <-- ¡IMPORTANTE! necesitas importar PILLOW
 import shutil

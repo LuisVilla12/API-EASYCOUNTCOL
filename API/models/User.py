@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from db import get_db
+from API.db import get_db
 from fastapi import HTTPException
 from passlib.context import CryptContext
 
