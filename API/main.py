@@ -9,7 +9,7 @@ from models.Sample import RegistarMuestra
 from fastapi.responses import FileResponse
 import shutil
 import os
-from API.db import get_db
+from db import get_db
 
 #Crea una instancia de la aplicación FastAPI.
 app = FastAPI()

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from fastapi import HTTPException
-from API.db import get_db
+from db import get_db
 from passlib.context import CryptContext
 
 class LoginUsuario(BaseModel):
