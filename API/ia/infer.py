@@ -13,7 +13,6 @@ from ultralytics import YOLO
 
 #Nombre de la imagen y CSV a procesar
 BASE = "4746"
-# Hook para extraer P3 (model.11)
 FEATURE_MAP = None
 
 # Hook para extraer P3 (model.11)
@@ -70,7 +69,7 @@ def extract_descriptor(box, fmap, img_shape):
 def vector_caracteristicas(img_name):
     global FEATURE_MAP
     # Modelo de YOLO a implementar
-    model = YOLO(r"Modelos_YOLO_Finales\1_Y12\weights\best.pt")
+    model = YOLO(r"YOLO\1_Y12\weights\best.pt")
     # Registro de la capa a extraer
     layer = model.model.model[6]
     layer.register_forward_hook(hook_fmap)
@@ -168,15 +167,7 @@ def cloustering(name_image):
     
     #RUTA DE LA IMAGEN Y DEL CSV
     CSV_PATH = rf"resultados\cvs\{BASE}.csv"
-    IMAGE_PATH = name_image
-    # IMAGENES EN DE RESULTADOS FINALEs
-    # OUTPUT_KMEANS = os.path.join(OUT_DIR, f"{BASE}_kmeans.jpg")
-    # OUTPUT_GMM = os.path.join(OUT_DIR, f"{BASE}_gmm.jpg")
-    # OUTPUT_DBSCAN = os.path.join(OUT_DIR, f"{BASE}_dbscan.jpg")
     OUTPUT_AGG = os.path.join(OUT_DIR, f"{BASE}_agglomerative.jpg")
-    # OUTPUT_MEANSHIFT = os.path.join(OUT_DIR, f"{BASE}_meanshift.jpg")
-    # OUTPUT_SPECTRAL = os.path.join(OUT_DIR, f"{BASE}_spectral.jpg")
-    # OUTPUT_OPTICS = os.path.join(OUT_DIR, f"{BASE}_optics.jpg")
     
     # Cargar CSV
     df = pd.read_csv(CSV_PATH)
@@ -207,61 +198,16 @@ def cloustering(name_image):
         labels_agg = np.zeros(n_samples, dtype=int)
         # labels_spectral = np.zeros(n_samples, dtype=int)
     else:
-        # ========== K-MEANS ==========
-        # kmeans = KMeans(n_clusters=optimal_clusters, random_state=42, n_init=10)
-        # labels_kmeans = kmeans.fit_predict(X_pca)
-
-        # ========== GMM ==========
-        # gmm = GaussianMixture(n_components=optimal_clusters, random_state=42)
-        # labels_gmm = gmm.fit_predict(X_pca)
-
         # ========== AGGLOMERATIVE ==========
         agg = AgglomerativeClustering(n_clusters=optimal_clusters, linkage='ward')
         labels_agg = agg.fit_predict(X_pca)
 
-        # ========== SPECTRAL CLUSTERING ==========
-        # ajustar n_neighbors al número de muestras
-        # n_neighbors = min(10, max(2, X_pca.shape[0] - 1))
-        # try:
-        #     spectral = SpectralClustering(n_clusters=optimal_clusters, affinity='nearest_neighbors', 
-        #                                   n_neighbors=n_neighbors, random_state=42, n_init=10)
-        #     labels_spectral = spectral.fit_predict(X_pca)
-        # except Exception as e:
-        #     print(f"⚠️ SpectralClustering falló: {e}. Se asignan etiquetas neutras.")
-        #     labels_spectral = np.zeros(n_samples, dtype=int)
-
-    # ========== DBSCAN ==========
-    # db = DBSCAN(eps=1.5, min_samples=1)
-    # labels_dbscan = db.fit_predict(X_pca)
-
-    # ========== MEANSHIFT ==========
-    # n_samples_ms = min(500, max(1, X_pca.shape[0]))
-    # bandwidth = estimate_bandwidth(X_pca, quantile=0.1, n_samples=n_samples_ms)
-    # if bandwidth <= 0 or np.isnan(bandwidth):
-    #     bandwidth = 1.0
-    #     print(f"⚠️ Bandwidth calculado fue inválido, usando valor por defecto: {bandwidth}")
-    # else:
-    #     print(f"Bandwidth estimado: {bandwidth}")
-
-    # ms = MeanShift(bandwidth=float(bandwidth), bin_seeding=True)
-    # labels_meanshift = ms.fit_predict(X_pca)
-
-    # ========== OPTICS ==========
-    # optics = OPTICS(min_samples=2, xi=0.05, min_cluster_size=2)
-    # labels_optics = optics.fit_predict(X_pca)
-
     # Cargar imagen
-    img = cv2.imread(IMAGE_PATH)
+    img = cv2.imread(name_image)
     if img is None:
-        raise FileNotFoundError(f"No se encontró la imagen: {IMAGE_PATH}")
+        raise FileNotFoundError(f"No se encontró la imagen: {name_image}")
 
-    # img_kmeans = img.copy()
-    # img_gmm = img.copy()
-    # img_db = img.copy()
     img_agg = img.copy()
-    # img_ms = img.copy()
-    # img_spectral = img.copy()
-    # img_optics = img.copy()
 
     # Paleta BGR para clusters (se reutiliza por si hay >2 clusters)
     PALETTE = [
@@ -289,13 +235,7 @@ def cloustering(name_image):
                 p += 1
         return cmap
 
-    # cmap_k = make_color_map(labels_kmeans)
-    # cmap_g = make_color_map(labels_gmm)
-    # cmap_d = make_color_map(labels_dbscan)
     cmap_a = make_color_map(labels_agg)
-    # cmap_m = make_color_map(labels_meanshift)
-    # cmap_sp = make_color_map(labels_spectral)
-    # cmap_op = make_color_map(labels_optics)
 
     # Dibujar bounding boxes en la imagen (grosor fino, sin texto)
     for i, row in df.iterrows():
@@ -305,44 +245,9 @@ def cloustering(name_image):
         ca = int(labels_agg[i])
         color_a = cmap_a.get(ca, (255,255,255))
         cv2.rectangle(img_agg, (x0, y0), (x1, y1), color_a, 1)
-        # # --- K-MEANS ---
-        # ck = int(labels_kmeans[i])
-        # color_k = cmap_k.get(ck, (255,255,255))
-        # cv2.rectangle(img_kmeans, (x0, y0), (x1, y1), color_k, 1)
-
-        # # --- GMM ---
-        # cg = int(labels_gmm[i])
-        # color_g = cmap_g.get(cg, (255,255,255))
-        # cv2.rectangle(img_gmm, (x0, y0), (x1, y1), color_g, 1)
-
-        # # --- DBSCAN ---
-        # cd = int(labels_dbscan[i])
-        # color_d = cmap_d.get(cd, (255,255,255))
-        # cv2.rectangle(img_db, (x0, y0), (x1, y1), color_d, 1)
-
-        # # --- MEANSHIFT ---
-        # cm = int(labels_meanshift[i])
-        # color_m = cmap_m.get(cm, (255,255,255))
-        # cv2.rectangle(img_ms, (x0, y0), (x1, y1), color_m, 1)
-
-        # # --- SPECTRAL CLUSTERING ---
-        # cs = int(labels_spectral[i])
-        # color_sp = cmap_sp.get(cs, (255,255,255))
-        # cv2.rectangle(img_spectral, (x0, y0), (x1, y1), color_sp, 1)
-
-        # # --- OPTICS ---
-        # co = int(labels_optics[i])
-        # color_op = cmap_op.get(co, (255,255,255))
-        # cv2.rectangle(img_optics, (x0, y0), (x1, y1), color_op, 1)
-
-    # Guardar imágenes
-    # cv2.imwrite(OUTPUT_KMEANS, img_kmeans)
-    # cv2.imwrite(OUTPUT_GMM, img_gmm)
-    # cv2.imwrite(OUTPUT_DBSCAN, img_db)
+        
     cv2.imwrite(OUTPUT_AGG, img_agg)
-    # cv2.imwrite(OUTPUT_MEANSHIFT, img_ms)
-    # cv2.imwrite(OUTPUT_SPECTRAL, img_spectral)
-    # cv2.imwrite(OUTPUT_OPTICS, img_optics)
+    
     return {
         "image_resultado": img_agg,
         "labels": 1
