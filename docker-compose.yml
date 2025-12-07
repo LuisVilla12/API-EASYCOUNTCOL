@@ -1,0 +1,30 @@
+services:
+  fastapi:
+    container_name: fastapi_yolo
+    build:
+      context: ./API
+      dockerfile: Dockerfile   # Ya no necesitas poner API/ porque ahora el context es API/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+  database:
+    container_name: mariadb_yolo
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+    ports:
+      - "3360:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/anki.sql
+
+volumes:
+  db_data:
