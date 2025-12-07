@@ -12,7 +12,7 @@ import numpy as np
 from ultralytics import YOLO
 
 #Nombre de la imagen y CSV a procesar
-BASE = "4746"
+BASE = ""
 FEATURE_MAP = None
 
 # Hook para extraer P3 (model.11)
@@ -68,13 +68,17 @@ def extract_descriptor(box, fmap, img_shape):
 
 def vector_caracteristicas(img_name):
     global FEATURE_MAP
-    # Modelo de YOLO a implementar
-    model = YOLO(r"YOLO\1_Y12\weights\best.pt")
+    # Modelo de YOLO a implementar (ruta con forward-slashes)
+    model = YOLO("YOLO/1_Y12/weights/best.pt")
+
     # Registro de la capa a extraer
     layer = model.model.model[6]
     layer.register_forward_hook(hook_fmap)
+
     # Cargar imagen
     img = cv2.imread(img_name)
+    if img is None:
+        raise FileNotFoundError(f"No se encontró la imagen: {img_name}")
     H_img, W_img = img.shape[:2]
 
     # Preprocesado
@@ -115,8 +119,12 @@ def vector_caracteristicas(img_name):
     C = FEATURE_MAP.shape[1] if FEATURE_MAP is not None else 0
     header = ["id", "x0", "y0", "x1", "y1"] + [f"f{i}" for i in range(C)]
 
-    # Guardar
-    with open(rf"resultados\cvs\{img_name}.csv", "w", newline="") as f:
+    # Asegurar carpeta y usar nombre base (sin extensión) para el CSV
+    os.makedirs("resultados/cvs", exist_ok=True)
+    base_name = os.path.splitext(os.path.basename(img_name))[0]
+    csv_path = f"resultados/cvs/{base_name}.csv"
+
+    with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(csv_rows)
@@ -156,20 +164,27 @@ def detect_optimal_clusters(X, max_clusters=4):
 
 
 def tratamiento_imagen(name_image):
-    # Obtener el vector de características
+    # Normalizar ruta y setear BASE a partir del nombre de archivo (sin extensión)
+    base_name = os.path.splitext(os.path.basename(name_image))[0]
+    global BASE
+    BASE = base_name
+
+    # Genera CSV
     vector_caracteristicas(name_image)
-    cloustering(name_image)
+
+    # Ejecuta clustering y retorna su resultado
+    return cloustering(name_image)
 
 def cloustering(name_image):
-    # RUTA PARA ALMACENAR LA IMAGEN
-    OUT_DIR = r"resultados\clustering_img"
+    OUT_DIR = "resultados/clustering_img"
     os.makedirs(OUT_DIR, exist_ok=True)
-    
-    #RUTA DE LA IMAGEN Y DEL CSV
-    CSV_PATH = rf"resultados\cvs\{BASE}.csv"
+
+    CSV_PATH = f"resultados/cvs/{BASE}.csv"
     OUTPUT_AGG = os.path.join(OUT_DIR, f"{BASE}_agglomerative.jpg")
-    
-    # Cargar CSV
+
+    if not os.path.exists(CSV_PATH):
+        raise FileNotFoundError(f"No se encontró el CSV requerido para clustering: {CSV_PATH}")
+
     df = pd.read_csv(CSV_PATH)
 
     # Columnas de features f0...fN
@@ -252,3 +267,8 @@ def cloustering(name_image):
         "image_resultado": img_agg,
         "labels": 1
 }
+
+if __name__ == "__main__":
+    # Prueba local: asegúrate de usar la ruta correcta dentro del proyecto
+    resultado = tratamiento_imagen("2828.jpg")
+    print(resultado)
