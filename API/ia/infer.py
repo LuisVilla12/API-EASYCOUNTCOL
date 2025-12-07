@@ -268,7 +268,7 @@ def cloustering(name_image):
         "labels": 1
 }
 
-if __name__ == "__main__":
-    # Prueba local: asegúrate de usar la ruta correcta dentro del proyecto
-    resultado = tratamiento_imagen("2828.jpg")
-    print(resultado)
+# if __name__ == "__main__":
+#     # Prueba local: asegúrate de usar la ruta correcta dentro del proyecto
+#     resultado = tratamiento_imagen("2828.jpg")
+#     print(resultado)
