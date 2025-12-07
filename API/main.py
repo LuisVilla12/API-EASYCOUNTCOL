@@ -24,6 +24,8 @@ app.add_middleware(
 #Define una ruta raíz
 @app.get("/")
 def home():
+    print("➡ Working directory (os.getcwd()):", os.getcwd())
+
     return {"mensaje": "Bienvenido a la API"}
 
 #Ruta para el registro de un usuario
@@ -70,7 +72,6 @@ def get_processed_image(id_muestra: int):
         sql = "SELECT sampleRoute FROM samples WHERE id = %s"
         cursor.execute(sql, (id_muestra,))
         result = cursor.fetchone()
-
         cursor.close()
         conn.close()
 
@@ -78,7 +79,7 @@ def get_processed_image(id_muestra: int):
             raise HTTPException(status_code=404, detail="Muestra no encontrada")
 
         filename = result[0]
-        processed_path = f"processed/{filename}"
+        processed_path = f"ia/resultados/clustering_img/{filename}"
 
         if not os.path.exists(processed_path):
             raise HTTPException(status_code=404, detail="Imagen procesada no encontrada")
@@ -107,7 +108,7 @@ def get_original_image(id_muestra: int):
             raise HTTPException(status_code=404, detail="Muestra no encontrada")
 
         filename = result[0]
-        original_path = f"uploads/{filename}"  # Asegúrate de que el archivo está en esta ruta
+        original_path = f"ia/resultados/img/{filename}"  # Asegúrate de que el archivo está en esta ruta
 
         if not os.path.exists(original_path):
             raise HTTPException(status_code=404, detail="Imagen original no encontrada")

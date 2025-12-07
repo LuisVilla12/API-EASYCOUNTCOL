@@ -67,24 +67,31 @@ def extract_descriptor(box, fmap, img_shape):
 
 
 def vector_caracteristicas(img_name):
+    full_path = os.path.join("ia/resultados/img/", img_name)
+    model_path= "ia/YOLO/1_Y12/weights/best.pt"
     global FEATURE_MAP
-    # Modelo de YOLO a implementar (ruta con forward-slashes)
-    model = YOLO("YOLO/1_Y12/weights/best.pt")
-
-    # Registro de la capa a extraer
-    layer = model.model.model[6]
-    layer.register_forward_hook(hook_fmap)
 
     # Cargar imagen
-    img = cv2.imread(img_name)
+    img= cv2.imread(full_path)
     if img is None:
         raise FileNotFoundError(f"No se encontró la imagen: {img_name}")
+    
     H_img, W_img = img.shape[:2]
 
     # Preprocesado
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_norm = img_rgb.astype(np.float32) / 255.0
     tensor = torch.from_numpy(img_norm).permute(2, 0, 1).unsqueeze(0)
+    
+    try:
+        model = YOLO(model_path)
+        print(" Modelo cargado correctamente.")
+    except Exception as e:
+        print("Error cargando modelo:", e)
+
+    # Registro de la capa a extraer
+    layer = model.model.model[17]
+    layer.register_forward_hook(hook_fmap)
 
     # Obtener device
     try:
@@ -99,11 +106,11 @@ def vector_caracteristicas(img_name):
 
     # Forward para generar fmap
     with torch.no_grad():
-        _ = model.model(tensor)
-
-    # Detecciones normales
-    results = model(img_name, verbose=False)
+        results = model(img_rgb, verbose=False)
+        
     boxes = results[0].boxes.xyxy.cpu().numpy()
+        # Ahora sí, results tiene las detecciones
+    print("🔍 Detectados:", len(boxes))
 
     csv_rows = []
     for idx, box in enumerate(boxes):
@@ -120,14 +127,17 @@ def vector_caracteristicas(img_name):
     header = ["id", "x0", "y0", "x1", "y1"] + [f"f{i}" for i in range(C)]
 
     # Asegurar carpeta y usar nombre base (sin extensión) para el CSV
-    os.makedirs("resultados/cvs", exist_ok=True)
+    os.makedirs("ia/resultados/cvs", exist_ok=True)
     base_name = os.path.splitext(os.path.basename(img_name))[0]
-    csv_path = f"resultados/cvs/{base_name}.csv"
+    csv_path = f"ia/resultados/cvs/{base_name}.csv"
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(csv_rows)
+    
+    # Regresa la cantidad de cajas detectadas
+    return len(boxes)
         
 # Función para detectar número óptimo de clusters
 def detect_optimal_clusters(X, max_clusters=4):
@@ -170,17 +180,19 @@ def tratamiento_imagen(name_image):
     BASE = base_name
 
     # Genera CSV
-    vector_caracteristicas(name_image)
+    count_col=vector_caracteristicas(name_image)
 
     # Ejecuta clustering y retorna su resultado
-    return cloustering(name_image)
+    return cloustering(name_image,count_col)
 
-def cloustering(name_image):
-    OUT_DIR = "resultados/clustering_img"
+def cloustering(name_image,count_col):
+    OUT_DIR = "ia/resultados/clustering_img"
+    full_path = os.path.join("ia/resultados/img/", name_image)
+
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    CSV_PATH = f"resultados/cvs/{BASE}.csv"
-    OUTPUT_AGG = os.path.join(OUT_DIR, f"{BASE}_agglomerative.jpg")
+    CSV_PATH = f"ia/resultados/cvs/{BASE}.csv"
+    OUTPUT_AGG = os.path.join(OUT_DIR, f"{BASE}.jpg")
 
     if not os.path.exists(CSV_PATH):
         raise FileNotFoundError(f"No se encontró el CSV requerido para clustering: {CSV_PATH}")
@@ -218,9 +230,9 @@ def cloustering(name_image):
         labels_agg = agg.fit_predict(X_pca)
 
     # Cargar imagen
-    img = cv2.imread(name_image)
+    img = cv2.imread(full_path)
     if img is None:
-        raise FileNotFoundError(f"No se encontró la imagen: {name_image}")
+        raise FileNotFoundError(f"No se encontró la imagen: {full_path}")
 
     img_agg = img.copy()
 
@@ -265,10 +277,5 @@ def cloustering(name_image):
     
     return {
         "image_resultado": img_agg,
-        "labels": 1
+        "labels": count_col
 }
-
-# if __name__ == "__main__":
-#     # Prueba local: asegúrate de usar la ruta correcta dentro del proyecto
-#     resultado = tratamiento_imagen("2828.jpg")
-#     print(resultado)

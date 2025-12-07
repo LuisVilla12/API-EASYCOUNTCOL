@@ -2,7 +2,7 @@ import os
 import mysql.connector
 
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'database'),
+    'host': os.getenv('DB_HOST', '127.0.0.1'),
     'user': os.getenv('DB_USER', 'root'),
     'password': os.getenv('DB_PASSWORD', 'lkqaz923'),
     'database': os.getenv('DB_NAME', 'easycountcol'),
