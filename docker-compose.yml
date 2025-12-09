@@ -12,6 +12,8 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      DB_HOST: database       # ← AÑADIR ESTO
+      DB_PORT: 3306           # ← OPCIONAL PERO RECOMENDADO
 
   database:
     container_name: mariadb_yolo
@@ -21,10 +23,10 @@ services:
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
     ports:
-      - "3360:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/anki.sql
+      # - ./init.sql:/docker-entrypoint-initdb.d/anki.sql
 
 volumes:
   db_data:

@@ -61,6 +61,7 @@ async def registrar_muestra_file(
         medioSample=medioSample,
         sample_file=sample_file
     )
+    
 
 #Ruta para mostar la imagen procesada
 @app.get("/imagen-procesada/{id_muestra}")

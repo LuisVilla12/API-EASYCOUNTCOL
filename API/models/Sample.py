@@ -84,9 +84,9 @@ class RegistarMuestra(BaseModel):
             sql = """
                 INSERT INTO samples (
                     sampleName, idUser, typeSample, volumenSample,
-                    factorSample, sampleRoute, creationDate,processingTime,count,creationTime, medioSample
+                    factorSample, sampleRoute, creationDate,processingTime,count,creationTime, medioSample,state
                 ) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,1)
             """
             cursor.execute(sql, (
                 muestra.sampleName,
