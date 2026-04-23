@@ -159,7 +159,7 @@ def getSamplesUser(idUser: int):
         conn = get_db()
         cursor = conn.cursor()
 
-        sql = "SELECT * FROM samples WHERE idUser = %s"
+        sql = "SELECT * FROM samples WHERE idUser = %s AND state = 1"  # Solo muestras activas del usuario
         cursor.execute(sql, (idUser,))
         result = cursor.fetchall()
         cursor.close()
@@ -178,7 +178,7 @@ def update_state_sample(sample_id: int):
     conn = get_db()
     cursor = conn.cursor()
     try:
-        sql = "UPDATE samples SET state = 0 WHERE id = %s"
+        sql = "UPDATE samples SET state = 0 WHERE id = %s "
         cursor.execute(sql, (sample_id,))
         conn.commit()
         
@@ -210,23 +210,19 @@ def update_sample(sample_id: int):
         conn.close()
         
 #Ruta para editar  una muestra
-@app.put("/sample/update/{sample_id}")
+@app.put("/sample/update/{sampleID}")
 async def update_sample(
+    sampleID: int,
     sampleName: str = Form(...),
-    idUser: int = Form(...),
     typeSample: str = Form(...),
     volumenSample: str = Form(...),
     factorSample: str = Form(...),
     medioSample: str = Form(...),
-    timeProcessingSample: str = Form(...),
-    countSample:str=Form(...),
-    dateSample: str = Form(...),
-    timeSample: str = Form(...),
-
+    
 ):
     return RegistarMuestra.update_sample(
+        sampleID=sampleID,
         sampleName=sampleName,
-        idUser=idUser,
         typeSample=typeSample,
         volumenSample=volumenSample,
         factorSample=factorSample,
